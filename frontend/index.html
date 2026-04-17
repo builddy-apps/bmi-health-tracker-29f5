@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Health Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d', 950: '#052e16'
+                        },
+                        accent: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74',
+                            400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c',
+                            800: '#9a3412', 900: '#7c2d12', 950: '#431407'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
+        .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slide-up 0.4s ease-out forwards; }
+        .stagger-1 { animation-delay: 0.05s; opacity: 0; }
+        .gauge-needle { transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: bottom center; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+    <header class="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div class="mx-auto max-w-6xl flex items-center justify-between px-4 h-16">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">BMI Tracker</span>
+                <nav class="hidden sm:flex items-center gap-1 ml-8">
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 rounded-lg transition-colors">Calculator</a>
+                    <a href="history.html" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">History</a>
+                </nav>
+            </div>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+        <section class="text-center mb-12 animate-fade-in">
+            <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-4">Know Your Health Better</h1>
+            <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Calculate your Body Mass Index and receive personalized health insights to guide your wellness journey.</p>
+        </section>
+
+        <section class="max-w-xl mx-auto mb-8 animate-fade-in stagger-1">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8">
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                        <button id="metricBtn" onclick="setUnit('metric')" class="px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm">Metric (cm, kg)</button>
+                        <button id="imperialBtn" onclick="setUnit('imperial')" class="px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 text-slate-600 dark:text-slate-400">Imperial (in, lb)</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300" id="heightLabel">Height (cm)</label>
+                        <input type="number" id="heightInput" placeholder="175" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300" id="weightLabel">Weight (kg)</label>
+                        <input type="number" id="weightInput" placeholder="70" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <button onclick="calculateBMI()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95">
+                    Calculate My BMI
+                </button>
+
+                <p id="errorMessage" class="hidden mt-4 text-sm text-red-500 text-center"></p>
+            </div>
+        </section>
+
+        <section id="resultsSection" class="hidden max-w-4xl mx-auto animate-fade-in">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8 mb-6">
+                <div class="flex flex-col lg:flex-row items-center gap-8">
+                    <div class="relative w-64 h-40 flex-shrink-0">
+                        <svg viewBox="0 0 200 120" class="w-full h-full">
+                            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#e2e8f0" stroke-width="20" stroke-linecap="round" class="dark:stroke-slate-700"/>
+                            <path d="M20 100 A80 80 0 0 1 56.7 42.8" fill="none" stroke="#3b82f6" stroke-width="20" stroke-linecap="round"/>
+                            <path d="M56.7 42.8 A80 80 0 0 1 143.3 42.8" fill="none" stroke="#22c55e" stroke-width="20" stroke-linecap="round"/>
+                            <path d="M143.3 42.8 A80 80 0 0 1 168.5 69.5" fill="none" stroke="#eab308" stroke-width="20" stroke-linecap="round"/>
+                            <path d="M168.5 69.5 A80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="20" stroke-linecap="round"/>
+                            <line id="gaugeNeedle" x1="100" y1="100" x2="100" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round" class="gauge-needle dark:stroke-slate-300"/>
+                            <circle cx="100" cy="100" r="8" fill="#334155" class="dark:fill-slate-300"/>
+                        </svg>
+                    </div>
+
+                    <div class="text-center lg:text-left flex-1">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Your BMI</p>
+                        <p id="bmiValue" class="text-6xl font-bold text-slate-900 dark:text-white mb-2">22.5</p>
+                        <p id="bmiCategory" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">Normal Weight</p>
+                        <div class="flex items-center justify-center lg:justify-start gap-2 mt-4">
+                            <button onclick="shareResults()" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                Share Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8 animate-slide-up">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Personalized Health Tips</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Based on your BMI category</p>
+                    </div>
+                </div>
+                <ul id="healthTips" class="space-y-3"></ul>
+            </div>
+        </section>
+
+        <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40 pb-safe">
+            <div class="flex">
+                <a href="index.html" class="flex-1 flex flex-col items-center py-3 text-emerald-600 dark:text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span class="text-xs mt-1 font-medium">Calculator</span>
+                </a>
+                <a href="history.html" class="flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-xs mt-1 font-medium">History</span>
+                </a>
+            </div>
+        </nav>
+
+        <div id="toast-container"></div>
+    </main>
+
+    <script src="app.js"></script>
+    <script src="calculator.js"></script>
+</body>
+</html>
